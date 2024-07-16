@@ -40,8 +40,8 @@ This eLearning platform is a comprehensive web application designed to manage on
 ```bash
 git clone https://github.com/yourusername/elearning-platform.git
 cd elearning-platform
-### Setup Virtual Environment
 ```
+### Setup Virtual Environment
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
