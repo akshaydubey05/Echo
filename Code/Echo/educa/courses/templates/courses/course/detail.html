@@ -19,11 +19,15 @@
       </p>
       {{ object.overview|linebreaks }}
       {% if request.user.is_authenticated %}
-        <form action="{% url "student_enroll_course" %}" method="post">
-          {{ enroll_form }}
-          {% csrf_token %}
-          <input type="submit" value="Enroll now">
-        </form>
+        {% if object in request.user.courses_joined.all %}
+          <p><em>You are enrolled in this course.</em></p>
+        {% else %}
+          <form action="{% url "student_enroll_course" %}" method="post">
+            {{ enroll_form }}
+            {% csrf_token %}
+            <input type="submit" value="Enroll now">
+          </form>
+        {% endif %}
       {% else %}
         <a href="{% url "student_registration" %}" class="button">
           Register to enroll
@@ -31,4 +35,44 @@
       {% endif %}
     </div>
   {% endwith %}
+
+  <div class="modules">
+    <h2>Course Modules</h2>
+    {% for module in object.modules.all %}
+      <div class="module">
+        <h3>{{ module.title }}</h3>
+        {% if module.description %}<p>{{ module.description|linebreaks }}</p>{% endif %}
+        <h4>Contents:</h4>
+        <ul>
+          {% for content in module.contents.all %}
+            <li>
+              <p>{{ content.item.title }} ({{ content.item|model_name }})</p>
+              {% if request.user.is_authenticated and object in request.user.courses_joined.all %}
+                {# Only show completion if user is enrolled #}
+                <form action="{% url 'mark_content_complete' content.id %}" method="post" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit">
+                    {% if content.id in completed_content_ids %}
+                      Mark as Incomplete
+                    {% else %}
+                      Mark as Complete
+                    {% endif %}
+                  </button>
+                </form>
+                {% if content.id in completed_content_ids %}
+                  <span style="color: green;">(Completed)</span>
+                {% else %}
+                  <span style="color: orange;">(Pending)</span>
+                {% endif %}
+              {% endif %}
+            </li>
+          {% empty %}
+            <li>No contents in this module.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% empty %}
+      <p>This course has no modules yet.</p>
+    {% endfor %}
+  </div>
 {% endblock %}

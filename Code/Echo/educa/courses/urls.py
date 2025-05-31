@@ -42,4 +42,7 @@ urlpatterns = [
     path('<slug:slug>/',
          views.CourseDetailView.as_view(),
          name='course_detail'),
+    path('content/<int:content_id>/mark-complete/',
+         views.MarkContentCompleteView.as_view(),
+         name='mark_content_complete'),
 ]
