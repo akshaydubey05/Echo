@@ -34,6 +34,11 @@ class Course(models.Model):
 
     class Meta:
         ordering = ['-created']
+        indexes = [
+            models.Index(fields=['subject'], name='course_subject_idx'),
+            models.Index(fields=['owner'], name='course_owner_idx'),
+            models.Index(fields=['created'], name='course_created_idx'),
+        ]
 
     def __str__(self):
         return self.title
@@ -49,6 +54,10 @@ class Module(models.Model):
 
     class Meta:
         ordering = ['order']
+        indexes = [
+            models.Index(fields=['course'], name='module_course_idx'),
+            models.Index(fields=['order'], name='module_order_idx'),
+        ]
 
     def __str__(self):
         return f'{self.order}. {self.title}'
@@ -71,6 +80,11 @@ class Content(models.Model):
 
     class Meta:
         ordering = ['order']
+        indexes = [
+            models.Index(fields=['module'], name='content_module_idx'),
+            models.Index(fields=['content_type', 'object_id'], name='content_gfk_idx'),
+            models.Index(fields=['order'], name='content_order_idx'),
+        ]
 
 
 class ItemBase(models.Model):
@@ -107,3 +121,28 @@ class Image(ItemBase):
 
 class Video(ItemBase):
     url = models.URLField()
+
+
+class StudentProgress(models.Model):
+    student = models.ForeignKey(User,
+                                related_name='progress',
+                                on_delete=models.CASCADE)
+    course = models.ForeignKey(Course,
+                               related_name='progress_by_students',
+                               on_delete=models.CASCADE)
+    content = models.ForeignKey(Content,
+                                related_name='completed_by_students',
+                                on_delete=models.CASCADE)
+    completed_at = models.DateTimeField(auto_now_add=True)
+    is_completed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('student', 'content')
+        ordering = ['-completed_at']
+        indexes = [
+            models.Index(fields=['student', 'course'], name='student_course_progress_idx'),
+            models.Index(fields=['student', 'content'], name='student_content_completed_idx'), # Supports unique_together and lookups
+        ]
+
+    def __str__(self):
+        return f"{self.student} completed {self.content} in {self.course} at {self.completed_at}"
